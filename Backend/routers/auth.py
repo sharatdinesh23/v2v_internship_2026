@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from core.security import get_profile_context, create_jwt
 from database import supabase
 from schemas.core import UserLogin, UserRegister
+from core.logger import logger
 
 ph = PasswordHasher()
 
@@ -49,13 +50,16 @@ async def register_user(user: UserRegister):
         if not insert_res.data:
             raise HTTPException(status_code=400, detail="Registration instantiation failed.")
 
+        logger.bind(user_id=new_id, service="backend").info(f"Student registered successfully: {user.email}")
         return {
             "message": "Student registered successfully.",
             "user_id": new_id,
         }
-    except HTTPException:
+    except HTTPException as e:
+        logger.bind(service="backend", error_code="REGISTRATION_FAIL").warning(f"Registration failed for {user.email}: {e.detail}")
         raise
     except Exception as exc:
+        logger.bind(service="backend", error_code="REGISTRATION_ERROR").error(f"Unexpected registration error: {exc}")
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
@@ -83,6 +87,7 @@ async def login_user(user: UserLogin):
         access_token = create_jwt(user_record["id"], user_record["email"])
         profile = get_profile_context(user_record["id"])
 
+        logger.bind(user_id=user_record["id"], service="backend").info(f"User login successful: {user.email}")
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -95,7 +100,10 @@ async def login_user(user: UserLogin):
             "internship_id": profile["internship_id"],
             "internship_name": profile["internship_name"],
         }
-    except HTTPException:
+    except HTTPException as e:
+        logger.bind(service="backend", error_code="LOGIN_FAIL").warning(f"Login failed for {user.email}: {e.detail}")
         raise
     except Exception as exc:
+        logger.bind(service="backend", error_code="LOGIN_ERROR").error(f"Unexpected login error: {exc}")
         raise HTTPException(status_code=401, detail=f"Authentication Failed: {str(exc)}") from exc
+

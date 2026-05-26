@@ -302,7 +302,7 @@ def notes_panel() -> rx.Component:
                         gap="4px",
                         align="center",
                     ),
-                    on_click=AppState.open_note_modal(item),
+                    on_click=lambda: AppState.open_note_modal(item),
                     background="transparent",
                     color=COLORS["primary"],
                     border=f"1px solid {COLORS['primary']}",

@@ -36,7 +36,7 @@ def teacher_notes() -> rx.Component:
                             "Edit",
                             variant="soft",
                             style={**note_action_btn_style, "background": "rgba(163, 166, 255, 0.18)", "color": COLORS["primary"]},
-                            on_click=AppState.open_note_editor(
+                            on_click=lambda: AppState.open_note_editor(
                                 item["id"],
                                 item["title"],
                                 item["markdown_content"],
@@ -47,7 +47,7 @@ def teacher_notes() -> rx.Component:
                             "Delete",
                             variant="soft",
                             style={**note_action_btn_style, "background": "rgba(255, 107, 122, 0.16)", "color": COLORS["error"]},
-                            on_click=AppState.delete_note_action(item["id"]),
+                            on_click=lambda: AppState.delete_note_action(item["id"]),
                         ),
                         gap="8px",
                     ),

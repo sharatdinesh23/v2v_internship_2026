@@ -541,3 +541,43 @@ async def delete_internship(
         raise
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+from pydantic import BaseModel, Field
+from core.logger import logger as app_logger
+
+class LogPayload(BaseModel):
+    level: str
+    message: str
+    user_id: str | None = None
+    session_id: str | None = None
+    error_code: str | None = None
+
+@router.post("/logs", status_code=200)
+async def create_system_log(payload: LogPayload):
+    try:
+        level_upper = payload.level.upper()
+        msg = payload.message
+        
+        bound_logger = app_logger.bind(
+            user_id=payload.user_id,
+            session_id=payload.session_id,
+            error_code=payload.error_code,
+            service="frontend"
+        )
+        
+        if level_upper == "INFO":
+            bound_logger.info(msg)
+        elif level_upper == "WARNING":
+            bound_logger.warning(msg)
+        elif level_upper == "ERROR":
+            bound_logger.error(msg)
+        elif level_upper == "CRITICAL":
+            bound_logger.critical(msg)
+        else:
+            bound_logger.info(msg)
+            
+        return {"status": "success"}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+

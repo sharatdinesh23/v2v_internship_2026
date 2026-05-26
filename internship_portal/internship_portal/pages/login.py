@@ -21,6 +21,7 @@ def role_btn(label: str, role: str, active_role: str) -> rx.Component:
 
 
 from internship_portal.state import AppState, api_request
+from internship_portal.logger import logger
 
 class LoginState(AppState):
     role: str = "student"
@@ -61,6 +62,9 @@ class LoginState(AppState):
             self.profile_name = data.get("user", {}).get("name", "")
             self.profile_email = data.get("user", {}).get("email", "")
             self.is_logged_in = True
+            
+            logger.bind(user_id=self.current_user_id, service="frontend").info(f"Frontend User login successful: {self.email}")
+            
             self.email = ""
             self.password = ""
 
@@ -70,7 +74,9 @@ class LoginState(AppState):
                 return rx.redirect("/admin-dashboard")
             return rx.redirect("/student-dashboard")
         except Exception as e:
+            logger.bind(service="frontend", error_code="FRONTEND_LOGIN_FAIL").warning(f"Frontend User login failed for {self.email}: {e}")
             return rx.window_alert(f"Login Failed: {str(e)}")
+
 
 
 
