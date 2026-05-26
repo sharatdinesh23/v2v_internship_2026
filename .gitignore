@@ -1,0 +1,96 @@
+# ==========================================
+# V2V Internship Portal - Git Ignore Rules
+# ==========================================
+
+# --- Python / FastAPI Backend ---
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+pyvenv.cfg
+.python-version
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Poetry / Pipenv
+.pipenv/
+Pipfile.lock
+poetry.lock
+
+# Testing / Coverage / Linting
+.ipynb_checkpoints
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.mypy_cache/
+.pyre/
+.pytype/
+cython_debug/
+
+# FastAPI/Uvicorn specific
+Backend/.env
+Backend/instance/
+Backend/uvicorn.err.log
+Backend/uvicorn.out.log
+Backend/app.db
+Backend/*.db
+
+# --- Reflex Frontend (internship_portal) ---
+# Reflex compiled web assets
+internship_portal/.web/
+internship_portal/.states/
+internship_portal/frontend_build/
+internship_portal/frontend.zip
+internship_portal/uploaded_files/
+internship_portal/*.db
+internship_portal/reflex.err.log
+internship_portal/reflex.out.log
+
+# --- General / OS / Editors ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

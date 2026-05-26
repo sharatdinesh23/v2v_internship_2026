@@ -1,0 +1,8 @@
+{
+  "name": "internship_portal_reflex_frontend",
+  "version": "1.0.0",
+  "description": "Reflex static build pipeline",
+  "scripts": {
+    "build": "pip install -r requirements.txt && reflex export --frontend-only --no-zip"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "buildCommand": "pip install -r requirements.txt && reflex export --frontend-only --no-zip",
+  "outputDirectory": ".web/_static"
+}
