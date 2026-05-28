@@ -16,13 +16,14 @@ logger.add(
 # API URL for log streaming (FastAPI backend port is 8888 by default)
 API_URL = "http://127.0.0.1:8888"
 
-def stream_to_backend(level, message, user_id=None, session_id=None, error_code=None):
+def stream_to_backend(level, message, user_id=None, session_id=None, error_code=None, caller=None):
     payload = {
         "level": level,
         "message": message,
         "user_id": user_id,
         "session_id": session_id,
-        "error_code": error_code
+        "error_code": error_code,
+        "caller": caller
     }
     
     async def post_log():
@@ -53,7 +54,14 @@ def db_log_sink(message):
     session_id = extra.get("session_id")
     error_code = extra.get("error_code")
     
-    stream_to_backend(level, msg, user_id, session_id, error_code)
+    # Extract caller (file_name:line_number) from extra (streamed) or record (local)
+    caller = extra.get("caller")
+    if not caller:
+        file_name = record["file"].name
+        line_number = record["line"]
+        caller = f"{file_name}:{line_number}"
+    
+    stream_to_backend(level, msg, user_id, session_id, error_code, caller)
 
 # Add database sink for INFO, WARNING, ERROR, CRITICAL levels
 logger.add(

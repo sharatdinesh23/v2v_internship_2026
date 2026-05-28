@@ -552,6 +552,7 @@ class LogPayload(BaseModel):
     user_id: str | None = None
     session_id: str | None = None
     error_code: str | None = None
+    caller: str | None = None
 
 @router.post("/logs", status_code=200)
 async def create_system_log(payload: LogPayload):
@@ -563,6 +564,7 @@ async def create_system_log(payload: LogPayload):
             user_id=payload.user_id,
             session_id=payload.session_id,
             error_code=payload.error_code,
+            caller=payload.caller,
             service="frontend"
         )
         

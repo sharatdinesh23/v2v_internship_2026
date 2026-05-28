@@ -25,11 +25,19 @@ def db_log_sink(message):
         error_code = extra.get("error_code")
         service = extra.get("service", "backend")
         
+        # Extract caller (file_name:line_number) from extra (streamed) or record (local)
+        caller = extra.get("caller")
+        if not caller:
+            file_name = record["file"].name
+            line_number = record["line"]
+            caller = f"{file_name}:{line_number}"
+        
         # Store in Supabase SystemLogs table
         payload = {
             "log_level": level,
             "log_message": msg,
             "service": service,
+            "caller": caller,
         }
         if user_id:
             payload["user_id"] = str(user_id)
