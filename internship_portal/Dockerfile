@@ -38,4 +38,4 @@ RUN reflex export --frontend-only --no-zip
 EXPOSE 8010
 
 # Command to run only the backend server (the frontend static files will be served by Nginx)
-CMD ["reflex", "run", "--backend-only", "--loglevel", "debug"]
+CMD ["reflex", "run", "--backend-only", "--backend-port", "8010", "--loglevel", "debug"]
