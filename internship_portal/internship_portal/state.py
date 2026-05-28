@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timezone
+import os
 from typing import Any, Dict, List
 
 import httpx
@@ -155,7 +156,7 @@ def normalize_note(item: dict) -> dict:
 
 
 class AppState(rx.State):
-    api_url: str = "http://127.0.0.1:8888"
+    api_url: str = os.getenv("FASTAPI_API_URL", "http://127.0.0.1:8888")
 
     auth_token: str = rx.Cookie("")
     current_user_id: str = rx.Cookie("")

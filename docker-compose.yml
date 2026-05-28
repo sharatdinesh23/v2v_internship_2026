@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # 1. FastAPI API Backend
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./Backend/.env
+    ports:
+      # Internal port 8888 mapped to localhost 8888 for testing if needed
+      - "127.0.0.1:8888:8888"
+    networks:
+      - portal-network
+
+  # 2. Reflex Backend Event Server
+  reflex-backend:
+    build:
+      context: ./internship_portal
+      dockerfile: Dockerfile
+      args:
+        # Pass the domain name down to compile the static JS targeting HTTPS
+        - REFLEX_API_URL=https://${DOMAIN_NAME}
+    restart: always
+    environment:
+      - FASTAPI_API_URL=http://backend:8888
+    env_file:
+      - ./Backend/.env
+    volumes:
+      # Export the statically compiled NextJS files into a shared volume
+      - reflex_static:/app/.web/_static
+    networks:
+      - portal-network
+    depends_on:
+      - backend
+
+  # 3. Nginx Web Server / Reverse Proxy
+  nginx:
+    image: nginx:stable-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Mount Nginx configuration
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # Mount shared volume containing Reflex statically compiled HTML/CSS/JS
+      - reflex_static:/usr/share/nginx/html:ro
+      # Mount SSL Certificates managed by Certbot
+      - letsencrypt:/etc/letsencrypt:ro
+      # Mount webroot directory for Let's Encrypt ACME challenges
+      - certbot_www:/var/www/certbot:ro
+    depends_on:
+      - backend
+      - reflex-backend
+    networks:
+      - portal-network
+
+  # 4. Certbot automated SSL Renewal Sidecar
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    # Check for SSL certificate renewal every 12 hours
+    entrypoint: "/bin/sh -c 'trap exit 0 SIGTERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - portal-network
+
+volumes:
+  reflex_static:
+  letsencrypt:
+  certbot_www:
+
+networks:
+  portal-network:
+    driver: bridge

@@ -1,3 +1,4 @@
+import os
 import sys
 import asyncio
 import httpx
@@ -14,7 +15,7 @@ logger.add(
 )
 
 # API URL for log streaming (FastAPI backend port is 8888 by default)
-API_URL = "http://127.0.0.1:8888"
+API_URL = os.getenv("FASTAPI_API_URL", "http://127.0.0.1:8888")
 
 def stream_to_backend(level, message, user_id=None, session_id=None, error_code=None, caller=None):
     payload = {
