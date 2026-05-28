@@ -39,18 +39,23 @@ graph TD
 
 ---
 
-## 🌐 Step 2: Link a Domain Name (Required for SSL/HTTPS)
+## 🌐 Step 2: Link your Hostinger Domain (Required for SSL/HTTPS)
 
-To secure your portal with Let's Encrypt, you need a domain name mapping to your EC2 Elastic IP.
+To secure your portal with Let's Encrypt, you must point your Hostinger domain (or a subdomain) to your EC2 Elastic IP address using an A Record:
 
-### Option A: Use a custom domain (e.g., Godaddy, Namecheap)
-Create an **A Record** in your DNS provider pointing to your EC2 Elastic IP:
-- **Type**: `A`
-- **Name**: `@` (or `portal`)
-- **Value**: `YOUR_EC2_ELASTIC_IP`
+### Option A: Use your Hostinger Domain
+1. Log in to your **Hostinger hPanel**.
+2. Navigate to **Domains** on the top menu and select your domain name.
+3. Click on **DNS / Nameservers** in the left sidebar.
+4. Under the **DNS Zone Editor**, create a new record:
+   - **Type**: `A`
+   - **Name**: `@` (if you want the main domain, e.g., `yourdomain.com`) OR `portal` (if you want a subdomain, e.g., `portal.yourdomain.com`)
+   - **Points to**: `YOUR_EC2_ELASTIC_IP`
+   - **TTL**: `3600` (for fast propagation)
+5. Click **Add Record** (or edit the existing `@` record if one exists).
 
 ### Option B: Use free Dynamic DNS (DuckDNS)
-If you don't own a domain, you can get a free subdomain in seconds:
+If you'd rather keep your main domain separate or run a quick test:
 1. Go to [duckdns.org](https://www.duckdns.org/) and log in.
 2. Create a subdomain (e.g., `v2v-internship.duckdns.org`).
 3. Enter your EC2 Elastic IP address in the IP box and click **Update IP**.

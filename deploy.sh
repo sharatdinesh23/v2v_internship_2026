@@ -158,10 +158,6 @@ echo -e "\n${CYAN}🔑 Step 4: Requesting Official Let's Encrypt SSL Certificate
 echo -e "${CYAN}------------------------------------------------------------------------${NC}"
 echo -e "${INFO} Requesting real certificate for ${YELLOW}$DOMAIN_NAME${NC}..."
 
-# Remove dummy certificates so certbot can overwrite
-rm -rf "$CERT_DIR"
-mkdir -p "/var/lib/docker/volumes/$(basename $(pwd))_letsencrypt/_data"
-
 # Run Certbot container to fetch the certificate via port 80 webroot challenge
 docker compose run --rm --entrypoint \
   "certbot certonly --webroot -w /var/www/certbot \
@@ -173,6 +169,8 @@ echo -e "${INFO} Aligning certificates for Nginx production profile..."
 # The certificates will be located in letsencrypt volume inside /etc/letsencrypt/live/$DOMAIN_NAME/
 # We will create a symlink or folder named "production" inside letsencrypt volume to point to $DOMAIN_NAME
 LE_VOLUME_DIR="/var/lib/docker/volumes/$(basename $(pwd))_letsencrypt/_data"
+# Remove dummy directory only after success, then create symlink
+rm -rf "$CERT_DIR"
 ln -sfn "$DOMAIN_NAME" "$LE_VOLUME_DIR/live/production"
 
 # --- 8. Reload Nginx ---
