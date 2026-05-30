@@ -158,11 +158,11 @@ def normalize_note(item: dict) -> dict:
 class AppState(rx.State):
     api_url: str = os.getenv("FASTAPI_API_URL", "http://127.0.0.1:8888")
 
-    auth_token: str = rx.Cookie("")
-    current_user_id: str = rx.Cookie("")
-    current_role: str = rx.Cookie("")
-    internship_id: str = rx.Cookie("")
-    internship_name: str = rx.Cookie("")
+    auth_token: str = rx.LocalStorage("")
+    current_user_id: str = rx.LocalStorage("")
+    current_role: str = rx.LocalStorage("")
+    internship_id: str = rx.LocalStorage("")
+    internship_name: str = rx.LocalStorage("")
     is_logged_in: bool = False
 
     selected_internship_id: str = ""
