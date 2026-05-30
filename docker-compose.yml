@@ -31,7 +31,7 @@ services:
     volumes:
       # Export the statically compiled NextJS files into a shared volume
       - reflex_static:/app/exported_static
-    command: sh -c "cp -r /app/.web/_static/. /app/exported_static/ && reflex run --backend-only --backend-port 8010 --loglevel debug"
+    command: sh -c "cp -r /app/.web/build/client/. /app/exported_static/ && reflex run --backend-only --backend-port 8010 --loglevel debug"
     networks:
       - portal-network
     depends_on:
