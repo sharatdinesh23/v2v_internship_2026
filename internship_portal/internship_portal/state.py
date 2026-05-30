@@ -457,19 +457,29 @@ class AppState(rx.State):
         return None
 
     async def _ensure_role(self, allowed_roles: List[str] | None = None):
-        # Acknowledge Reflex cookie sync delay in production environments
+        print(f"🔒 [ROLE CHECK] Started for roles: {allowed_roles}")
+        # Poll up to 1.5 seconds for LocalStorage state synchronization in production
+        for i in range(15):
+            if self.auth_token:
+                print(f"🔒 [ROLE CHECK] Token found after {i*0.1:.1f}s: {self.auth_token[:15]}...")
+                break
+            await asyncio.sleep(0.1)
+
         if not self.auth_token:
-            await asyncio.sleep(0.3)
-        if not self.auth_token:
+            print("❌ [ROLE CHECK] Redirecting to / because auth_token is empty!")
             return rx.redirect("/")
         try:
-            await self.fetch_profile()
-        except Exception:
+            profile = await self.fetch_profile()
+            print(f"👤 [ROLE CHECK] Fetched profile for {profile.get('email')}: role={self.current_role}")
+        except Exception as e:
+            print(f"❌ [ROLE CHECK] Failed to fetch profile: {e}")
             self._clear_session()
             return rx.redirect("/")
 
         if allowed_roles and self.current_role not in allowed_roles:
+            print(f"❌ [ROLE CHECK] Redirecting because role '{self.current_role}' is not in {allowed_roles}")
             return rx.redirect(self._dashboard_route())
+        print(f"✅ [ROLE CHECK] Approved for role: {self.current_role}!")
         return None
 
     async def fetch_profile(self):
@@ -570,6 +580,13 @@ class AppState(rx.State):
         )
         self.students = students
         return students
+
+    async def fetch_students_safe(self, internship_id: str | None = None):
+        try:
+            return await self.fetch_students(internship_id)
+        except Exception:
+            self.students = []
+            return []
 
     async def fetch_assignments(self):
         assignments = await api_request(self.api_url, "GET", "/api/assignments/", token=self.auth_token)
@@ -680,6 +697,14 @@ class AppState(rx.State):
             self.student_attendance = int(current_student["attendance_pct"]) if current_student else 0
         return data
 
+    async def fetch_attendance_summary_safe(self, internship_id: str | None = None):
+        try:
+            return await self.fetch_attendance_summary(internship_id)
+        except Exception:
+            self.attendance_records = []
+            self.attendance_chart_data = []
+            return {}
+
     async def fetch_review_submissions(self, assignment_id: str):
         submissions = await api_request(
             self.api_url,
@@ -692,23 +717,33 @@ class AppState(rx.State):
         return self.review_submissions
 
     async def refresh_admin_scope_data(self):
-        assignments, notes = await asyncio.gather(self.fetch_assignments(), self.fetch_notes())
+        try:
+            assignments, notes = await asyncio.gather(self.fetch_assignments(), self.fetch_notes())
+        except Exception as exc:
+            redirect = self._session_expired_redirect(exc)
+            if redirect:
+                return redirect
+            assignments, notes = [], []
+
         current_id = self.selected_internship_id
         self.teacher_active_assignments_list = (
             [item for item in assignments if item.get("internship_id") == current_id] if current_id else assignments
         )
         self.teacher_notes_list = [item for item in notes if item.get("internship_id") == current_id] if current_id else notes
-        try:
-            await asyncio.gather(
-                self.fetch_analytics_safe(current_id),
-                self.fetch_students(current_id),
-                self.fetch_attendance_summary(current_id),
-            )
-        except Exception as exc:
-            redirect = self._session_expired_redirect(exc)
-            if redirect:
-                return redirect
-            raise
+        
+        results = await asyncio.gather(
+            self.fetch_analytics_safe(current_id),
+            self.fetch_students_safe(current_id),
+            self.fetch_attendance_summary_safe(current_id),
+            return_exceptions=True,
+        )
+        
+        for res in results:
+            if isinstance(res, Exception):
+                redirect = self._session_expired_redirect(res)
+                if redirect:
+                    return redirect
+                    
         self._set_selected_internship_name()
 
     async def on_load_register(self):
@@ -765,17 +800,22 @@ class AppState(rx.State):
         if redirect:
             return redirect
 
-        try:
-            assignments, notes, _ = await asyncio.gather(
-                self.fetch_assignments(),
-                self.fetch_notes(),
-                self.fetch_analytics_safe(),
-            )
-        except Exception as exc:
-            redirect = self._session_expired_redirect(exc)
-            if redirect:
-                return redirect
-            raise
+        results = await asyncio.gather(
+            self.fetch_assignments(),
+            self.fetch_notes(),
+            self.fetch_analytics_safe(),
+            return_exceptions=True,
+        )
+        
+        assignments = results[0] if not isinstance(results[0], Exception) else []
+        notes = results[1] if not isinstance(results[1], Exception) else []
+        
+        for res in results:
+            if isinstance(res, Exception):
+                redirect = self._session_expired_redirect(res)
+                if redirect:
+                    return redirect
+                    
         self.teacher_active_assignments_list = assignments
         self.teacher_notes_list = notes
         self.selected_internship = self.internship_name or "Unassigned"
@@ -826,14 +866,20 @@ class AppState(rx.State):
             raise
 
     async def on_load_admin_dashboard(self):
+        print("🚩 [ADMIN DASHBOARD] Page load mount triggered!")
         redirect = await self._ensure_role(["admin"])
         if redirect:
+            print("🚩 [ADMIN DASHBOARD] Redirecting user from _ensure_role!")
             return redirect
 
+        print("🚩 [ADMIN DASHBOARD] Fetching active internships...")
         await self.fetch_internships()
+        print("🚩 [ADMIN DASHBOARD] Refreshing admin data scope...")
         redirect = await self.refresh_admin_scope_data()
         if redirect:
+            print("🚩 [ADMIN DASHBOARD] Redirecting user from scope data refresh!")
             return redirect
+        print("🚩 [ADMIN DASHBOARD] Page loaded successfully!")
 
     async def on_load_internships(self):
         redirect = await self._ensure_role(["admin"])

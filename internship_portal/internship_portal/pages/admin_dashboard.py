@@ -15,7 +15,7 @@ def attendance_table() -> rx.Component:
             rx.table.cell(record.get("present", 0), style=td_style),
             rx.table.cell(record.get("absent", 0), style=td_style),
             rx.table.cell(record.get("late", 0), style=td_style),
-            rx.table.cell(f"{record.get('attendance_pct', 0)}%", style=td_style),
+            rx.table.cell(record.get("attendance_pct", 0).to(str) + "%", style=td_style),
             rx.table.cell(status_badge(record.get("status", "Good"), status_color), style=td_style),
         )
 
