@@ -81,3 +81,7 @@ async def health_check(request: Request):
 async def health(request:Request):
     return {"status": 200, "message": "OK", "timestamp": datetime.now().isoformat()}
 
+@app.get("/api/health")
+async def api_health(request:Request):
+    return {"status": 200, "message": "OK", "timestamp": datetime.now().isoformat()}
+
