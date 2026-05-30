@@ -457,6 +457,9 @@ class AppState(rx.State):
         return None
 
     async def _ensure_role(self, allowed_roles: List[str] | None = None):
+        # Acknowledge Reflex cookie sync delay in production environments
+        if not self.auth_token:
+            await asyncio.sleep(0.3)
         if not self.auth_token:
             return rx.redirect("/")
         try:
